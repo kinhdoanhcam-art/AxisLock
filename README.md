@@ -17,7 +17,8 @@ The technical contract name remains `RoleSeparationGuard`; **AxisLock** is the
 product and interface name.
 
 The exact deployed source is included at
-[`contract/RoleSeparationGuard.py`](./contract/RoleSeparationGuard.py).
+[`contract/AxisLock.py`](./contract/AxisLock.py). The filename follows the
+product name while the deployed Python class remains `RoleSeparationGuard`.
 
 ## What it does
 

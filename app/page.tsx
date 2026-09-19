@@ -109,23 +109,8 @@ type Holder = {
 type Ledger = { workspace: Workspace; roles: LedgerRole[]; attempts: Attempt[] };
 type InitialRole = { name: string; definition: string };
 
-type ModelContext = {
-  registerTool(
-    tool: {
-      name: string;
-      title: string;
-      description: string;
-      inputSchema: Record<string, unknown>;
-      annotations?: { readOnlyHint?: boolean; untrustedContentHint?: boolean };
-      execute(input: unknown): unknown | Promise<unknown>;
-    },
-    options?: { signal?: AbortSignal },
-  ): void | Promise<void>;
-};
-
 declare global {
   interface Window { ethereum?: EthereumProvider }
-  interface Document { modelContext?: ModelContext }
 }
 
 const nav = ["Overview", "Workspace", "Roles", "Assign", "Ledger", "Proof"] as const;
@@ -331,60 +316,6 @@ export default function Home() {
       throw error;
     } finally { setLedgerLoading(false); }
   }, [ledgerWorkspace]);
-
-  useEffect(() => {
-    const context = document.modelContext;
-    if (!context?.registerTool) return;
-    const lifecycle = new AbortController();
-    const register = (tool: Parameters<ModelContext["registerTool"]>[0]) => void Promise.resolve(context.registerTool(tool, { signal: lifecycle.signal })).catch(() => undefined);
-    register({
-      name: "inspect_axislock_workspace",
-      title: "Inspect AxisLock workspace",
-      description: "Read a finalized role-separation workspace, its current role versions, and assignment decisions.",
-      inputSchema: { type: "object", properties: { workspaceId: { type: "integer", minimum: 1 } }, required: ["workspaceId"], additionalProperties: false },
-      annotations: { readOnlyHint: true, untrustedContentHint: true },
-      async execute(input) {
-        const workspaceId = Number((input as { workspaceId?: unknown }).workspaceId);
-        if (!Number.isInteger(workspaceId) || workspaceId < 1) throw new Error("workspaceId must be a positive integer");
-        setActive("Ledger");
-        return loadLedger(workspaceId);
-      },
-    });
-    register({
-      name: "stage_axislock_workspace",
-      title: "Stage AxisLock workspace",
-      description: "Populate a separation policy and initial roles for user review without submitting a transaction.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          policy: { type: "string", minLength: 1, maxLength: 3000 },
-          roles: { type: "array", minItems: 1, maxItems: 3, items: { type: "object", properties: { name: { type: "string" }, definition: { type: "string" } }, required: ["name", "definition"] } },
-        },
-        required: ["policy", "roles"], additionalProperties: false,
-      },
-      annotations: { readOnlyHint: false, untrustedContentHint: true },
-      execute(input) {
-        const value = input as { policy?: unknown; roles?: unknown };
-        if (typeof value.policy !== "string" || !Array.isArray(value.roles)) throw new Error("A policy and one to three roles are required");
-        setPolicy(value.policy); setInitialRoles(value.roles as InitialRole[]); setActive("Workspace");
-        return { staged: true, submitted: false };
-      },
-    });
-    register({
-      name: "stage_axislock_assignment",
-      title: "Stage AxisLock assignment",
-      description: "Populate an assignment for user review without connecting a wallet or submitting it.",
-      inputSchema: { type: "object", properties: { workspaceId: { type: "integer", minimum: 1 }, holder: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" }, roleId: { type: "integer", minimum: 1 } }, required: ["workspaceId", "holder", "roleId"], additionalProperties: false },
-      annotations: { readOnlyHint: false, untrustedContentHint: true },
-      execute(input) {
-        const value = input as { workspaceId?: unknown; holder?: unknown; roleId?: unknown };
-        if (!Number.isInteger(Number(value.workspaceId)) || typeof value.holder !== "string" || !Number.isInteger(Number(value.roleId))) throw new Error("Valid workspace, holder, and role values are required");
-        setAssignWorkspace(String(value.workspaceId)); setHolderAddress(value.holder); setAssignRoleId(String(value.roleId)); setActive("Assign");
-        return { staged: true, submitted: false };
-      },
-    });
-    return () => lifecycle.abort();
-  }, [loadLedger]);
 
   const metrics = useMemo(() => [
     ["WORKSPACES", loading ? "—" : String(config?.workspace_count ?? 0), "finalized scopes"],
