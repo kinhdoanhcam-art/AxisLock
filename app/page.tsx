@@ -34,6 +34,7 @@ const RPC_URL = "https://studio.genlayer.com/api";
 const EXPLORER_URL = `https://explorer-studio.genlayer.com/address/${CONTRACT_ADDRESS}`;
 const SOURCE_SHA = "7d3c6060d01b97efd426702c50d755f0dad3ba5b0f4a6eb4f4738ad748340b6f";
 const DEPLOY_TX = "0xe809aa1d6e1a6b74b99976b91d4ed7636701a379ac933d64611471972aed9612";
+const FINALIZED_VARIANT = "latest-final" as never;
 const chain = { ...studionet, rpcUrls: { default: { http: [RPC_URL] } } };
 const readClient = createClient({ chain });
 
@@ -108,6 +109,7 @@ type Holder = {
 
 type Ledger = { workspace: Workspace; roles: LedgerRole[]; attempts: Attempt[] };
 type InitialRole = { name: string; definition: string };
+type ContractArg = null | boolean | number | bigint | string | Uint8Array | ContractArg[] | { [key: string]: ContractArg };
 
 declare global {
   interface Window { ethereum?: EthereumProvider }
@@ -175,7 +177,7 @@ export default function Home() {
         address: CONTRACT_ADDRESS,
         functionName: "get_config",
         args: [],
-        transactionHashVariant: "latest-final",
+        transactionHashVariant: FINALIZED_VARIANT,
       })) as Config;
       setConfig(result);
     } catch (error) {
@@ -221,7 +223,7 @@ export default function Home() {
     throw new Error("Confirmation is taking longer than expected. Keep the transaction hash and do not resubmit yet.");
   }, []);
 
-  const write = useCallback(async (functionName: string, args: unknown[], success: string) => {
+  const write = useCallback(async (functionName: string, args: ContractArg[], success: string) => {
     setTxHash("");
     setTxStatus("PREPARING");
     try {
@@ -285,7 +287,7 @@ export default function Home() {
     if (!/^0x[a-fA-F0-9]{40}$/.test(holderAddress)) throw new Error("Enter a valid 0x holder address.");
     setHolderLoading(true);
     try {
-      const result = (await readClient.readContract({ address: CONTRACT_ADDRESS, functionName: "get_holder", args: [positiveInteger(assignWorkspace, "Workspace ID"), holderAddress], transactionHashVariant: "latest-final" })) as Holder;
+      const result = (await readClient.readContract({ address: CONTRACT_ADDRESS, functionName: "get_holder", args: [positiveInteger(assignWorkspace, "Workspace ID"), holderAddress], transactionHashVariant: FINALIZED_VARIANT })) as Holder;
       setHolder(result);
       return result;
     } catch (error) {
@@ -298,15 +300,15 @@ export default function Home() {
     const wid = workspaceOverride ?? positiveInteger(ledgerWorkspace, "Workspace ID");
     setLedgerLoading(true);
     try {
-      const workspace = (await readClient.readContract({ address: CONTRACT_ADDRESS, functionName: "get_workspace", args: [wid], transactionHashVariant: "latest-final" })) as Workspace;
+      const workspace = (await readClient.readContract({ address: CONTRACT_ADDRESS, functionName: "get_workspace", args: [wid], transactionHashVariant: FINALIZED_VARIANT })) as Workspace;
       const roleRows = await Promise.all(Array.from({ length: workspace.role_count }, async (_, index) => {
         const roleId = index + 1;
-        const role = (await readClient.readContract({ address: CONTRACT_ADDRESS, functionName: "get_role", args: [wid, roleId], transactionHashVariant: "latest-final" })) as Role;
-        const version = (await readClient.readContract({ address: CONTRACT_ADDRESS, functionName: "get_role_version", args: [wid, roleId, role.current_version], transactionHashVariant: "latest-final" })) as RoleVersion;
+        const role = (await readClient.readContract({ address: CONTRACT_ADDRESS, functionName: "get_role", args: [wid, roleId], transactionHashVariant: FINALIZED_VARIANT })) as Role;
+        const version = (await readClient.readContract({ address: CONTRACT_ADDRESS, functionName: "get_role_version", args: [wid, roleId, role.current_version], transactionHashVariant: FINALIZED_VARIANT })) as RoleVersion;
         return { ...role, version };
       }));
       const attempts = workspace.attempt_count
-        ? (await readClient.readContract({ address: CONTRACT_ADDRESS, functionName: "get_attempts", args: [wid, 1, Math.min(workspace.attempt_count, 50)], transactionHashVariant: "latest-final" })) as Attempt[]
+        ? (await readClient.readContract({ address: CONTRACT_ADDRESS, functionName: "get_attempts", args: [wid, 1, Math.min(workspace.attempt_count, 50)], transactionHashVariant: FINALIZED_VARIANT })) as Attempt[]
         : [];
       const next = { workspace, roles: roleRows, attempts };
       setLedgerWorkspace(String(wid)); setLedger(next);

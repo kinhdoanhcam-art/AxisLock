@@ -50,3 +50,14 @@ pnpm build
 ```
 
 See [TESTING.md](./TESTING.md) for the manual contract-flow checklist.
+
+## Deploy to Vercel
+
+Import the GitHub repository and use the **Next.js** framework preset.
+
+- Build command: `pnpm build` (or leave the detected default)
+- Output directory: leave empty
+- Install command: `pnpm install --frozen-lockfile` (or leave the detected default)
+
+The production build writes the standard Next.js output to `.next`; do not set
+the Vercel output directory to `dist`.
