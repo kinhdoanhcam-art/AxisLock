@@ -20,7 +20,26 @@ Both commands must finish successfully before deployment.
 4. Open every navigation item and confirm each operational screen renders.
 5. Open **Proof** and verify the contract address and explorer link.
 
-## Write-path test
+## Verified StudioNet run
+
+Date: 2026-09-20
+
+- Contract: `0xcABB03122773C299Bd0894A79fABb7d4b1cC2556`
+- Workspace: `1`
+- Initial roles: `Initiator` and `Approver`
+- First assignment: `FIRST_ROLE_ASSIGNED`
+- Semantic verdict: `ROLE_PAIR_CONFLICT`
+- Conflicting assignment: `BLOCKED_CONFLICT`
+- Final active assignments: `1`
+- Final blocked conflicts: `1`
+- Role 2 current version: `2`
+- Role 2 has 0 active holders after its definition was revised.
+
+This confirms deterministic first-role assignment, validator-based semantic
+conflict detection, immutable role versioning, and permanent role-pair conflict
+enforcement.
+
+## Extended test checklist
 
 1. Connect an EVM-compatible wallet on chain `61999`.
 2. Create a workspace with an immutable policy and two roles.
@@ -35,4 +54,3 @@ Both commands must finish successfully before deployment.
 
 Never resubmit a transaction while its current hash is still pending. AxisLock
 waits for the StudioNet transaction status to reach `FINALIZED`.
-

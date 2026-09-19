@@ -5,6 +5,13 @@ AxisLock is a GenLayer role-boundary interface for the deployed
 roles whose natural-language responsibilities violate an immutable separation
 policy.
 
+## Live application
+
+- App: <https://axis-lock.vercel.app>
+- Network: GenLayer StudioNet (`61999`)
+- Contract: `0xcABB03122773C299Bd0894A79fABb7d4b1cC2556`
+- Explorer: <https://explorer-studio.genlayer.com/address/0xcABB03122773C299Bd0894A79fABb7d4b1cC2556>
+
 ## Live contract
 
 - Network: GenLayer StudioNet (`61999`)
@@ -31,6 +38,17 @@ product name while the deployed Python class remains `RoleSeparationGuard`.
 5. Permanently locks a role-ID pair after a conflict verdict, preventing later
    rewording from bypassing the decision.
 6. Exposes the complete role and assignment-attempt ledger for verification.
+
+## Verified behavior
+
+A finalized StudioNet test was completed on workspace `#1`:
+
+- Role 1 was assigned with `FIRST_ROLE_ASSIGNED`.
+- Assigning conflicting Role 2 produced `ROLE_PAIR_CONFLICT`.
+- The assignment outcome was `BLOCKED_CONFLICT`.
+- The holder remained at one active role.
+- Role 2 was updated to version 2 and has 0 active holders.
+- Final workspace state: 2 roles, 1 active assignment, 1 blocked conflict.
 
 ## Run locally
 
